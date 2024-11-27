@@ -1,4 +1,5 @@
 import Todo from "../models/todo.mjs";
+import { todoSchema } from "../schema/todoSchema.mjs"; 
 
 // Get all todos for the logged-in user
 export const getTodo = async (req, res) => {
@@ -13,13 +14,13 @@ export const getTodo = async (req, res) => {
 // Add a new todo
 export const addTodo = async (req, res) => {
   try {
-    const { title, description } = req.body;
+    const { error } = todoSchema.validate(req.body);
 
-    if (!title || !description) {
-      return res
-        .status(400)
-        .json({ message: "Title and description are required" });
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message });
     }
+
+    const { title, description } = req.body;
 
     const todo = await Todo.create({
       title,
@@ -30,6 +31,41 @@ export const addTodo = async (req, res) => {
     res.status(201).json(todo);
   } catch (error) {
     res.status(500).json({ message: "Failed to add todo", error });
+  }
+};
+
+// Update a todo by ID
+export const updateTodo = async (req, res) => {
+  try {
+    const todoId = req.params.id;
+    const { title, description } = req.body;
+
+    const { error } = todoSchema.validate(req.body);
+
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message });
+    }
+
+    const dbTodo = await Todo.findById(todoId);
+
+    if (!dbTodo) {
+      return res.status(404).json({ message:x`` "Todo not found" });
+    }
+
+    if (String(dbTodo.user) !== String(req.user._id)) {
+      return res
+        .status(403)
+        .json({ message: "Unauthorized to update this todo" });
+    }
+
+    dbTodo.title = title || dbTodo.title;
+    dbTodo.description = description || dbTodo.description;
+
+    await dbTodo.save();
+
+    res.status(200).json(dbTodo);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to update todo", error });
   }
 };
 
