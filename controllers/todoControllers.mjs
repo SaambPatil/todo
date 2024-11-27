@@ -1,7 +1,6 @@
 import Todo from "../models/todo.mjs";
 import { todoSchema } from "../schema/todoSchema.mjs"; 
 
-// Get all todos for the logged-in user
 export const getTodo = async (req, res) => {
   try {
     const todos = await Todo.find({ user: req.user._id });
@@ -11,7 +10,6 @@ export const getTodo = async (req, res) => {
   }
 };
 
-// Add a new todo
 export const addTodo = async (req, res) => {
   try {
     const { error } = todoSchema.validate(req.body);
@@ -34,7 +32,6 @@ export const addTodo = async (req, res) => {
   }
 };
 
-// Update a todo by ID
 export const updateTodo = async (req, res) => {
   try {
     const todoId = req.params.id;
@@ -49,7 +46,7 @@ export const updateTodo = async (req, res) => {
     const dbTodo = await Todo.findById(todoId);
 
     if (!dbTodo) {
-      return res.status(404).json({ message:x`` "Todo not found" });
+      return res.status(404).json({ message: "Todo not found" });
     }
 
     if (String(dbTodo.user) !== String(req.user._id)) {
@@ -69,7 +66,6 @@ export const updateTodo = async (req, res) => {
   }
 };
 
-// Delete a todo by ID
 export const deleteTodo = async (req, res) => {
   try {
     const todoId = req.params.id;
